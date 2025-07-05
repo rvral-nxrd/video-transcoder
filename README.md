@@ -1,7 +1,9 @@
 #Script Overview
+
 This script is designed to automate video transcoding and monitoring tasks.
 
 #Features
+
 The script provides the following features:
 
 - Transcodes video files to a specified format
