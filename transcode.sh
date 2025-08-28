@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## Version 8.1
+
 # Set default verbosity level
 VERBOSE=0
 

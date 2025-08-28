@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## Version 1.2.2
+
 # Parse options
 while getopts ":d:L:-:" opt; do
   case $opt in
