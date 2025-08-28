@@ -1,5 +1,5 @@
 #!/bin/bash
-## Version 1.3
+## Version 1.4
 # Parse options
 while getopts ":d:L:-:" opt; do
   case $opt in
@@ -49,9 +49,20 @@ mkdir -p /transcode/scripts
 cp transcode.sh /transcode/scripts/
 chmod +x /transcode/scripts/transcode.sh
 
-# Copy service file to systemd location
-cp transcode.service /etc/systemd/system/
-chmod 644 /etc/systemd/system/transcode.service
+# Create service file
+cat << EOF > /etc/systemd/system/transcode.service
+[Unit]
+Description=Video Transcoder Service
+After=network.target
+
+[Service]
+User=$(whoami)
+ExecStart=/bin/bash -c '/usr/bin/inotifywait -m -e close_write $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh "$dir$filename"; done'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # Reload systemd daemon
 systemctl daemon-reload
