@@ -1,5 +1,5 @@
 #!/bin/bash
-## Version 1.4.1
+## Version 1.4.2
 # Parse options
 while getopts ":d:L:-:" opt; do
   case $opt in
@@ -60,7 +60,7 @@ After=network.target
 
 [Service]
 User=$(whoami)
-ExecStart=/bin/bash -c '/usr/bin/inotifywait -m $DIRECTORY -e close_write --format "%w%f" 2>&1 | tee -a /var/log/transcode/inotify.log | while read -r filename; do if [ -n "$filename" ]; then /transcode/scripts/transcode.sh "$DIRECTORY/$filename"; else /transcode/scripts/transcode.sh "$DIRECTORY$filename"; fi; done'
+ExecStart=/bin/bash -c '/usr/bin/inotifywait -m $DIRECTORY -e close_write --format "%f" 2>&1 | tee -a /var/log/transcode/inotify.log | while read -r filename; do if [ -n "$filename" ]; then /transcode/scripts/transcode.sh "$DIRECTORY/$filename"; fi; done'
 Restart=always
 
 [Install]
