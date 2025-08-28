@@ -1,6 +1,6 @@
-#!/bin/bash
+# Version 1.3
 
-## Version 1.2.2
+#!/bin/bash
 
 # Parse options
 while getopts ":d:L:-:" opt; do
@@ -48,7 +48,7 @@ fi
 mkdir -p /transcode/scripts
 
 # Copy transcoding script to transcoding script directory
-cp transcode-v8.1.sh /transcode/scripts/transcode.sh
+cp transcode.sh /transcode/scripts/
 chmod +x /transcode/scripts/transcode.sh
 
 # Create service file

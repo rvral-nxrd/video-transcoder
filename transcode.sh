@@ -1,18 +1,16 @@
 #!/bin/bash
-
-## Version 8.1
-
+## Version 8.2
 # Set default verbosity level
 VERBOSE=0
 
 # Parse options
 while getopts ":d:L:v" opt; do
   case $opt in
-  # use -d and a path to specify the directory to monitor
+    # use -d and a path to specify the directory to monitor
     d) DIRECTORY="$OPTARG";;
-  # use -L and a path to log output to a file
+    # use -L and a path to log output to a file
     L) LOG_FILE="$OPTARG";;
-  # use -v for verbose output
+    # use -v for verbose output
     v) VERBOSE=1;;
     \?) echo "Invalid option: -$OPTARG"; exit 1;;
   esac
@@ -50,14 +48,13 @@ fi
 TRANSCODING_PROCESS() {
   # Get the file's creation date
   DATE=$(stat -c "%y" "$FILE_PATH" | cut -d ' ' -f 1)
-  
   # Create the output subfolder if it doesn't exist
   OUTPUT_FOLDER="${FILE_PATH%/*}/$DATE"
   mkdir -p "$OUTPUT_FOLDER"
   if [ $VERBOSE -eq 1 ]; then
     echo "Created output folder: $OUTPUT_FOLDER"
   fi
-  
+
   # Transcode the video file
   OUTPUT_FILE="$OUTPUT_FOLDER/${FILE_PATH##*/}"
   OUTPUT_FILE="${OUTPUT_FILE%.*}.mov"
@@ -67,7 +64,7 @@ TRANSCODING_PROCESS() {
   else
     ffmpeg -nostdin -y -loglevel error -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$OUTPUT_FILE"
   fi
-  
+
   if [ $? -eq 0 ]; then
     echo "Transcoding complete: $OUTPUT_FILE"
     rm "$FILE_PATH" && echo "Deleted original file: $FILE_PATH"
