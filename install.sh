@@ -1,5 +1,5 @@
 #!/bin/bash
-## Version 1.4
+## Version 1.4.1
 # Parse options
 while getopts ":d:L:-:" opt; do
   case $opt in
@@ -57,7 +57,7 @@ After=network.target
 
 [Service]
 User=$(whoami)
-ExecStart=/bin/bash -c '/usr/bin/inotifywait -m -e close_write $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh "$dir$filename"; done'
+ExecStart=/bin/bash -c '/usr/bin/inotifywait -m -d $DIRECTORY -e close_write --format "%w%f" | while read -r filename; do /transcode/scripts/transcode.sh "$DIRECTORY$filename"; done'
 Restart=always
 
 [Install]

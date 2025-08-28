@@ -1,5 +1,5 @@
 #!/bin/bash
-## Version 8.2.1
+## Version 8.2.2
 # Set default verbosity level
 VERBOSE=0
 
@@ -16,7 +16,13 @@ fi
 # Transcoding process function
 TRANSCODING_PROCESS() {
   # Get the file's creation date
-  DATE=$(stat -c "%y" "$FILE_PATH" | cut -d ' ' -f 1)
+  if [ -f "$FILE_PATH" ]; then
+    DATE=$(stat -c "%y" "$FILE_PATH" | cut -d ' ' -f 1)
+  else
+    echo "Error: File not found - $FILE_PATH"
+    exit 1
+  fi
+  
   # Create the output subfolder if it doesn't exist
   OUTPUT_FOLDER="${FILE_PATH%/*}/$DATE"
   mkdir -p "$OUTPUT_FOLDER"
