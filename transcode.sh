@@ -1,32 +1,7 @@
 #!/bin/bash
-## Version 8.2
+## Version 8.2.1
 # Set default verbosity level
 VERBOSE=0
-
-# Parse options
-while getopts ":d:L:v" opt; do
-  case $opt in
-    # use -d and a path to specify the directory to monitor
-    d) DIRECTORY="$OPTARG";;
-    # use -L and a path to log output to a file
-    L) LOG_FILE="$OPTARG";;
-    # use -v for verbose output
-    v) VERBOSE=1;;
-    \?) echo "Invalid option: -$OPTARG"; exit 1;;
-  esac
-done
-
-# Check if directory is specified
-if [ -z "$DIRECTORY" ]; then
-  echo "Error: Directory not specified. Use -d flag to specify the directory."
-  exit 1
-fi
-
-# Set up logging if LOG_FILE is specified
-if [ -n "$LOG_FILE" ]; then
-  mkdir -p "$(dirname "$LOG_FILE")"
-  exec > >(tee -a "$LOG_FILE") 2>&1
-fi
 
 # Get the file path from the argument
 if [ $# -gt 0 ]; then
@@ -34,14 +9,8 @@ if [ $# -gt 0 ]; then
   # Remove trailing newline character if present
   FILE_PATH=${FILE_PATH%%[[:space:]]}
 else
-  # Get the current working directory
-  INPUT_FOLDER="$DIRECTORY"
-  # Find video files in the input folder
-  find "$INPUT_FOLDER" -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.avi" -o -name "*.mov" -o -name "*.ts" \) -print0 | while IFS= read -r -d '' FILE_PATH; do
-    # Run the transcoding process
-    TRANSCODING_PROCESS
-  done
-  exit 0
+  echo "Error: File path not specified."
+  exit 1
 fi
 
 # Transcoding process function
