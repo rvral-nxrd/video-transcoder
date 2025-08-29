@@ -42,6 +42,9 @@ if [ -z "$DIRECTORY" ]; then
   exit 1
 fi
 
+# Source requirements script
+source requirements.sh
+
 # Create transcoding script directory
 mkdir -p /transcode/scripts
 
