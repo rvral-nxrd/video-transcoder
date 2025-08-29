@@ -1,6 +1,5 @@
 #!/bin/bash
-## Version 1.5.0
-# copilot
+## Version 1.5.1
 
 set -e  # Exit on any error
 
@@ -52,12 +51,6 @@ fi
 # Validate directory input
 if [ -z "$DIRECTORY" ]; then
   echo "❌ Error: Directory not specified. Use -d to specify the directory."
-  exit 1
-fi
-
-# Check if inotifywait is installed
-if ! command -v inotifywait >/dev/null 2>&1; then
-  echo "❌ Error: inotifywait is not installed. Install it with: sudo apt install inotify-tools"
   exit 1
 fi
 
