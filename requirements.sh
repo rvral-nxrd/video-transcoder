@@ -1,6 +1,7 @@
 #!/bin/bash
-## Version 1.2.0
+## Version 1.2.1
 # This script checks for and installs required packages for video transcoding.
+# Alpine support has been removed.
 
 REQUIRED_PACKAGES=("ffmpeg" "inotify-tools")
 
@@ -12,8 +13,6 @@ detect_package_manager() {
     echo "dnf"
   elif command -v pacman &> /dev/null; then
     echo "pacman"
-  elif command -v apk &> /dev/null; then
-    echo "apk"
   else
     echo "Unsupported package manager"
     exit 1
@@ -31,9 +30,6 @@ check_package() {
       ;;
     pacman)
       pacman -Q "$1" &> /dev/null
-      ;;
-    apk)
-      apk info -e "$1" &> /dev/null
       ;;
     *)
       echo "Unsupported package manager"
@@ -55,9 +51,6 @@ install_package() {
     pacman)
       sudo pacman -Sy --noconfirm "$1"
       ;;
-    apk)
-      sudo apk add "$1"
-      ;;
     *)
       echo "Unsupported package manager"
       exit 1
@@ -76,4 +69,5 @@ for package in "${REQUIRED_PACKAGES[@]}"; do
     echo "✅ $package is already installed"
   fi
 done
+
 echo "🎉 All required packages are installed."
