@@ -60,7 +60,7 @@ After=network.target
 
 [Service]
 User=$(whoami)
-ExecStart=/bin/bash -c '/usr/bin/inotifywait -m -r $DIRECTORY -e close_write 2>&1 | tee -a /var/log/transcode/inotify.log | while read -r path events filename; do if [ -n "$filename" ]; then /transcode/scripts/transcode.sh "$path$filename"; fi; done'
+ExecStart=/bin/bash -c '/usr/bin/inotifywait -m -e close_write $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh "$dir$filename"; done'
 Restart=always
 
 [Install]
