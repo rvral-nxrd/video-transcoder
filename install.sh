@@ -1,81 +1,102 @@
 #!/bin/bash
-## Version 1.4.3
+## Version 1.5.0
+# copilot
+
+set -e  # Exit on any error
+
+# Default values
+UNINSTALL=0
+LOG_FILE=""
+
 # Parse options
-while getopts ":d:L:-:" opt; do
-  case $opt in
-    d) DIRECTORY="$OPTARG";;
-    L) LOG_FILE="$OPTARG";;
-    -) 
-      case $OPTARG in
-        uninstall) UNINSTALL=1;;
-      esac
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -d)
+      DIRECTORY="$2"
+      shift 2
       ;;
-    \?) echo "Invalid option: -$OPTARG"; exit 1;;
+    -L)
+      LOG_FILE="$2"
+      shift 2
+      ;;
+    --uninstall)
+      UNINSTALL=1
+      shift
+      ;;
+    --help|-h)
+      echo "Usage: $0 [-d directory] [-L log_file] [--uninstall]"
+      exit 0
+      ;;
+    *)
+      echo "Invalid option: $1"
+      exit 1
+      ;;
   esac
 done
 
-# Check if uninstall flag is set
+# Uninstallation logic
 if [ "$UNINSTALL" = "1" ]; then
-  # Stop and disable the service
-  systemctl stop transcode.service
-  systemctl disable transcode.service
-  
-  # Remove the service file
-  rm /etc/systemd/system/transcode.service
-  
-  # Remove the transcoding script directory
-  rm -rf /transcode/scripts
-  
-  # Remove the log files
-  rm -rf /var/log/transcode
-  
-  # Reload systemd daemon
-  systemctl daemon-reload
-  
-  echo "Uninstallation complete."
+  echo "Uninstalling transcoding service..."
+
+  sudo systemctl stop transcode.service || true
+  sudo systemctl disable transcode.service || true
+  sudo rm -f /etc/systemd/system/transcode.service
+  sudo rm -rf /transcode/scripts
+  sudo rm -rf /var/log/transcode
+  sudo systemctl daemon-reload
+
+  echo "✅ Uninstallation complete."
   exit 0
 fi
 
-# Check if directory is specified
+# Validate directory input
 if [ -z "$DIRECTORY" ]; then
-  echo "Error: Directory not specified. Use -d flag to specify the directory."
+  echo "❌ Error: Directory not specified. Use -d to specify the directory."
   exit 1
 fi
 
-# Source requirements script
+# Check if inotifywait is installed
+if ! command -v inotifywait >/dev/null 2>&1; then
+  echo "❌ Error: inotifywait is not installed. Install it with: sudo apt install inotify-tools"
+  exit 1
+fi
+
+# Check for requirements.sh
+if [ ! -f requirements.sh ]; then
+  echo "❌ Error: requirements.sh not found."
+  exit 1
+fi
+
+# Source requirements
 source requirements.sh
 
-# Create transcoding script directory
-mkdir -p /transcode/scripts
+# Create necessary directories
+sudo mkdir -p /transcode/scripts
+sudo mkdir -p /var/log/transcode
 
-# Create log directory
-mkdir -p /var/log/transcode
+# Copy and set permissions for transcoding script
+sudo cp transcode.sh /transcode/scripts/
+sudo chmod +x /transcode/scripts/transcode.sh
 
-# Copy transcoding script to transcoding script directory
-cp transcode.sh /transcode/scripts/
-chmod +x /transcode/scripts/transcode.sh
-
-# Create service file
-cat << EOF > /etc/systemd/system/transcode.service
+# Create systemd service file
+sudo tee /etc/systemd/system/transcode.service > /dev/null << EOF
 [Unit]
 Description=Video Transcoder Service
 After=network.target
 
 [Service]
 User=$(whoami)
-ExecStart=/bin/bash -c '/usr/bin/inotifywait -m -e close_write $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh "$dir$filename"; done'
+ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh \"\$dir\$filename\"; done"
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Reload systemd daemon
-systemctl daemon-reload
+# Reload and start service
+sudo systemctl daemon-reload
+sudo systemctl enable transcode.service
+sudo systemctl start transcode.service
 
-# Enable and start the service
-systemctl enable transcode.service
-systemctl start transcode.service
-
-echo "Transcoding service installed successfully!"
-echo "Directory: $DIRECTORY"
+echo "✅ Transcoding service installed successfully!"
+echo "Watching directory: $DIRECTORY"
