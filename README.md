@@ -1,7 +1,8 @@
 
 # 🎬 Transcode Service
 
-A lightweight, automated video transcoding service for Linux systems. It watches a specified directory for new video files, transcodes them using `ffmpeg`, and organizes the output by creation date. Designed for simplicity, modularity, and extensibility.
+ I designed this script specifically for `Davinci Resolve` free users on Linux, since it does not support a lot of codecs. I used codecs I know work without issue, stay close to the original file's quality and file size. 
+ It watches a specified directory for new video files, transcodes them using `ffmpeg`, and organizes the output by creation date.
 
 ---
 
@@ -20,10 +21,11 @@ A lightweight, automated video transcoding service for Linux systems. It watches
   Runs as a persistent background service using `systemd`.
 
 - **Uninstall Support**  
-  Clean removal of all service components via a single flag.
+  Clean removal of all service components via a single `--uninstall` flag.
 
 - **Cross-Distro Compatibility**  
-  Supports `apt`, `dnf`, and `pacman` package managers.  
+  Supports `apt`, `dnf`, and `pacman` package managers.
+
   ⚠️ *Alpine support has been deprecated and will be handled in a separate script.*
 
 ---
@@ -61,7 +63,7 @@ Run the `install.sh` script with the required options:
 The `transcode.sh` script handles the actual conversion:
 
 - **Input**: Any video file detected in the watched directory  
-- **Output**: `.mov` format using MPEG-4 video and PCM audio  
+- **Output**: `.mov` format using the `mpeg-4` video codec and `pcm_s16le` audio codec 
 - **Post-process**: Deletes original file after successful transcoding  
 - **Logging**: Outputs to `/var/log/transcode/[timestamp].log` or custom path via `-L`
 
@@ -131,6 +133,7 @@ cat /var/log/transcode/20250829_173100.log
 ## 🤝 Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you’d like to change.
+Or, fork the project and build a better one, please, I beg you.
 
 ---
 
