@@ -50,7 +50,7 @@ Run the `install.sh` script with the required options:
 | Flag            | Argument         | Description                                                  |
 |-----------------|------------------|--------------------------------------------------------------|
 | `-d`            | `/path/to/watch` | Directory to monitor for new video files                    |
-| `-L`            | `/path/to/logs`  | Custom directory to store log files                         |
+| `-L`            | `/path/to/logs`  | Custom directory to store log files, optional                         |
 | `--uninstall`   | *(none)*         | Removes the service and all associated files                |
 | `--help`, `-h`  | *(none)*         | Displays usage information and exits                        |
 
