@@ -144,5 +144,3 @@ This project is open-source and available under the [MIT License](LICENSE).
 > This script was created in collaboration with Microsoft Copilot, an AI companion.  
 > Copilot Version: August 2025  
 > Copilot is licensed under the [Microsoft License Terms](https://aka.ms/copilotlicense).
-
-
