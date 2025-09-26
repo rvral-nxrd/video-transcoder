@@ -169,7 +169,7 @@ This will:
   - Checks for an installs `cron` or `cronie`, depending on `distro`, if it is not installed already.
 ---
 
-## 🧰 Coming Soon...##
+## 🧰 Coming Soon! ##
 
 - Optional flags for dry-run, quarantine toggle and metadata based dating.
 - Alpine support.
