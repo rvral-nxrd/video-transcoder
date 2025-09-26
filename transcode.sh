@@ -1,6 +1,6 @@
 #!/bin/bash
-## Version 8.3.1
-# Lazy folder creation using .cache directory to avoid empty folders on failure
+## Version 8.3.2
+# Adds quarantine system with sidecar fail files and running failure log
 
 VERBOSE=0
 LOG_DIR="/var/log/transcode"
@@ -29,7 +29,6 @@ if [ -z "$FILE_PATH" ]; then
   exit 1
 fi
 
-# Remove trailing whitespace
 FILE_PATH=${FILE_PATH%%[[:space:]]}
 
 # Create log file with timestamp
@@ -73,8 +72,21 @@ TRANSCODING_PROCESS() {
 
     rm "$FILE_PATH" && log "🗑️ Deleted original file: $FILE_PATH"
   else
+    ERROR_MSG=$(tail -n 1 "$LOG_FILE")
+    FAILED_DIR="$(dirname "$FILE_PATH")/failed"
+    mkdir -p "$FAILED_DIR"
+
+    # Sidecar .fail file
+    echo "$ERROR_MSG" > "$FAILED_DIR/$BASENAME.fail"
+
+    # Running log
+    echo "$(date '+%Y-%m-%d %H:%M') - $(basename "$FILE_PATH") - $ERROR_MSG" >> "$FAILED_DIR/failure.txt"
+
+    # Move original file
+    mv "$FILE_PATH" "$FAILED_DIR/"
     rm -f "$TEMP_OUTPUT"
-    log "❌ Transcoding failed: $FILE_PATH"
+
+    log "❌ Transcoding failed: $FILE_PATH → moved to quarantine"
   fi
 }
 
