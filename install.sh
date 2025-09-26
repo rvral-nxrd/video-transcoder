@@ -1,12 +1,14 @@
 #!/bin/bash
-## Version 1.5.2.1
-## improved file and directory handling with inotifywait regression fix, back to version 1.5.1 with added moved_to support.
+## Version 1.5.3
+## Moves transcode.sh to /opt/auto-transcode/, adds .cache cleanup cron job, preserves moved_to support
 
 set -e  # Exit on any error
 
 # Default values
 UNINSTALL=0
 LOG_FILE=""
+INSTALL_PATH="/opt/auto-transcode"
+SCRIPT_NAME="transcode.sh"
 
 # Parse options
 while [[ $# -gt 0 ]]; do
@@ -41,10 +43,14 @@ if [ "$UNINSTALL" = "1" ]; then
   sudo systemctl stop transcode.service || true
   sudo systemctl disable transcode.service || true
   sudo rm -f /etc/systemd/system/transcode.service
-  sudo rm -rf /transcode/scripts
+  sudo rm -rf "$INSTALL_PATH"
   sudo rm -rf /var/log/transcode
-  sudo systemctl daemon-reload
 
+  # Remove cron job
+  CRON_TAG="# auto-transcode cache cleanup"
+  crontab -l | grep -v "$CRON_TAG" | crontab -
+
+  sudo systemctl daemon-reload
   echo "✅ Uninstallation complete."
   exit 0
 fi
@@ -65,12 +71,12 @@ fi
 source requirements.sh
 
 # Create necessary directories
-sudo mkdir -p /transcode/scripts
+sudo mkdir -p "$INSTALL_PATH"
 sudo mkdir -p /var/log/transcode
 
 # Copy and set permissions for transcoding script
-sudo cp transcode.sh /transcode/scripts/
-sudo chmod +x /transcode/scripts/transcode.sh
+sudo cp "$SCRIPT_NAME" "$INSTALL_PATH/$SCRIPT_NAME"
+sudo chmod +x "$INSTALL_PATH/$SCRIPT_NAME"
 
 # Create systemd service file
 sudo tee /etc/systemd/system/transcode.service > /dev/null << EOF
@@ -80,7 +86,7 @@ After=network.target
 
 [Service]
 User=$(logname)
-ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write,moved_to $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh \"\$dir\$filename\"; done"
+ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write,moved_to $DIRECTORY | while read -r dir events filename; do $INSTALL_PATH/$SCRIPT_NAME \"\$dir\$filename\"; done"
 Restart=always
 
 [Install]
@@ -92,5 +98,13 @@ sudo systemctl daemon-reload
 sudo systemctl enable transcode.service
 sudo systemctl start transcode.service
 
+# Setup cron job for .cache cleanup
+CRON_TAG="# auto-transcode cache cleanup"
+CRON_JOB="0 3 * * * find \"$DIRECTORY/.cache\" -type f -mtime +1 -delete $CRON_TAG"
+
+crontab -l | grep -v "$CRON_TAG" | crontab -
+(crontab -l; echo "$CRON_JOB") | crontab -
+
 echo "✅ Transcoding service installed successfully!"
 echo "Watching directory: $DIRECTORY"
+echo "🧹 Cron job added to clean .cache daily at 03:00"
