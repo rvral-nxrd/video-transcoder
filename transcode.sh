@@ -1,6 +1,6 @@
 #!/bin/bash
-## Version 8.3.0
-# Enhanced with timestamped logging and optional log directory
+## Version 8.3.1
+# Lazy folder creation using .cache directory to avoid empty folders on failure
 
 VERBOSE=0
 LOG_DIR="/var/log/transcode"
@@ -47,25 +47,33 @@ TRANSCODING_PROCESS() {
     exit 1
   fi
 
-  DATE=$(stat -c "%y" "$FILE_PATH" | cut -d ' ' -f 1)
-  OUTPUT_FOLDER="${FILE_PATH%/*}/$DATE"
-  mkdir -p "$OUTPUT_FOLDER"
-  [ $VERBOSE -eq 1 ] && log "📁 Created output folder: $OUTPUT_FOLDER"
+  EXT="${FILE_PATH##*.}"
+  BASENAME="$(basename "$FILE_PATH" ."$EXT")"
+  CACHE_DIR="$(dirname "$FILE_PATH")/.cache"
+  mkdir -p "$CACHE_DIR"
 
-  OUTPUT_FILE="$OUTPUT_FOLDER/${FILE_PATH##*/}"
-  OUTPUT_FILE="${OUTPUT_FILE%.*}.mov"
+  TEMP_OUTPUT="$CACHE_DIR/$BASENAME.mov"
   log "🎬 Transcoding file: $FILE_PATH"
 
   if [ $VERBOSE -eq 1 ]; then
-    ffmpeg -nostdin -y -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$OUTPUT_FILE" 2>>"$LOG_FILE"
+    ffmpeg -nostdin -y -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$TEMP_OUTPUT" 2>>"$LOG_FILE"
   else
-    ffmpeg -nostdin -y -loglevel error -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$OUTPUT_FILE" 2>>"$LOG_FILE"
+    ffmpeg -nostdin -y -loglevel error -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$TEMP_OUTPUT" 2>>"$LOG_FILE"
   fi
 
   if [ $? -eq 0 ]; then
-    log "✅ Transcoding complete: $OUTPUT_FILE"
+    DATE=$(stat -c "%y" "$FILE_PATH" | cut -d ' ' -f 1)
+    OUTPUT_FOLDER="${FILE_PATH%/*}/$DATE"
+    mkdir -p "$OUTPUT_FOLDER"
+    [ $VERBOSE -eq 1 ] && log "📁 Created output folder: $OUTPUT_FOLDER"
+
+    FINAL_OUTPUT="$OUTPUT_FOLDER/$BASENAME.mov"
+    mv "$TEMP_OUTPUT" "$FINAL_OUTPUT"
+    log "✅ Transcoding complete: $FINAL_OUTPUT"
+
     rm "$FILE_PATH" && log "🗑️ Deleted original file: $FILE_PATH"
   else
+    rm -f "$TEMP_OUTPUT"
     log "❌ Transcoding failed: $FILE_PATH"
   fi
 }
