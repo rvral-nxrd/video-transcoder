@@ -1,5 +1,5 @@
 #!/bin/bash
-## Version 1.2.1
+## Version 1.2.3
 # This script checks for and installs required packages for video transcoding.
 # Alpine support has been removed.
 
@@ -69,5 +69,16 @@ for package in "${REQUIRED_PACKAGES[@]}"; do
     echo "✅ $package is already installed"
   fi
 done
+
+# Check and install cron
+if ! command -v crontab &> /dev/null; then
+  case "$PKG_MANAGER" in
+    apt) install_and_enable "cron" "cron" ;;
+    dnf) install_and_enable "cronie" "crond" ;;
+    pacman) install_and_enable "cronie" "cronie" ;;
+  esac
+else
+  echo "✅ cron is already installed"
+fi
 
 echo "🎉 All required packages are installed."
