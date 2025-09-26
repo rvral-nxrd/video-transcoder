@@ -105,11 +105,19 @@ A dedicated Alpine-compatible script will be released separately.
 
 ---
 
+## 🗒️ Changelog
+
+ **install.sh v1.5.2**
+- Added moved_to support to detect same filesystem changes e.g. from one folder to the watched folder in the same drive.
+- switched to --format '%w%f' for reliable path parsing
+- Minor README and logging improvements
+
+---
 ## 📄 Versioning Summary
 
 | Script Name       | Version | Notes                                 |
 |------------------|---------|----------------------------------------|
-| `install.sh`     | 1.5.1   | Systemd setup and teardown             |
+| `install.sh`     | 1.5.2   | Systemd setup and teardown             |
 | `transcode.sh`   | 8.2.3   | Transcoding with logging enhancements  |
 | `requirements.sh`| 1.2.1   | Alpine support removed                 |
 
@@ -132,8 +140,7 @@ cat /var/log/transcode/20250829_173100.log
 
 ## 🤝 Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you’d like to change.
-Or, fork the project and build a better one, please, I beg you.
+Fork the project and build a better one, please, I beg you. I do NOT have the time or skill to maintain this project!
 
 ---
 

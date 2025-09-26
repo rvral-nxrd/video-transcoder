@@ -1,5 +1,6 @@
 #!/bin/bash
-## Version 1.5.1
+## Version 1.5.2
+## improved file and directory handling with inotifywait
 
 set -e  # Exit on any error
 
@@ -78,8 +79,8 @@ Description=Video Transcoder Service
 After=network.target
 
 [Service]
-User=$(whoami)
-ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh \"\$dir\$filename\"; done"
+User=$(logname)
+ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write,moved_to --format '%w%f' $DIRECTORY | while read -r filepath; do /transcode/scripts/transcode.sh \"\$filepath\"; done"t a
 Restart=always
 
 [Install]
