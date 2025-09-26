@@ -12,16 +12,19 @@
   Monitors a directory using `inotifywait` and triggers transcoding on file write completion.
 
 - **Date-Based Organization**  
-  Output files are stored in subfolders named after the original file's creation date.
+  Output files are stored in subfolders named after the original file's creation date.  
 
 - **Custom Logging**  
-  Each transcoding session generates a timestamped log file. Users can optionally specify a custom log directory.
+  Each transcoding session generates a timestamped log file in `/var/log/transcode`. Users can optionally specify a custom log directory.
 
 - **Systemd Integration**  
   Runs as a persistent background service using `systemd`.
 
 - **Uninstall Support**  
   Clean removal of all service components via a single `--uninstall` flag.
+
+- **Failure Handling**
+  Failed transcodes are moved to `failed` with a `.fail` sidecar file and a running log.
 
 - **Cross-Distro Compatibility**  
   Supports `apt`, `dnf`, and `pacman` package managers.
@@ -36,9 +39,20 @@ The following packages are required and automatically installed via `requirement
 
 - `ffmpeg`
 - `inotify-tools`
+- `cron`
 
 ---
 
+## 📂 Directory Structure  
+
+```bash
+/watch/                    # Watched directory
+  ├── .cache/              # Temporary transcoding output
+  ├── failed/              # Quarantine for failed files
+  ├── YYYY-MM-DD/          # Dated output folders for successful transcodes
+```
+
+---
 ## 🛠 Installation
 
 Run the `install.sh` script with the required options:
@@ -46,15 +60,37 @@ Run the `install.sh` script with the required options:
 ```bash
 ./install.sh -d /path/to/watch
 ```
+This will install:
+- `ffmpeg`
+- `inotify-tools`
+- `cron` (or `cronie` depending on distro)
+- Create a `systemd` service to monitor the folder and a `cron` job that runs everyday at 3am to clean up `.cache`
 
-### ⚙️ Optional Flags
+---
+
+### ⚙️ Flags
 
 | Flag            | Argument         | Description                                                  |
 |-----------------|------------------|--------------------------------------------------------------|
-| `-d`            | `/path/to/watch` | Directory to monitor for new video files                    |
-| `-L`            | `/path/to/logs`  | Custom directory to store log files, optional                         |
-| `--uninstall`   | *(none)*         | Removes the service and all associated files                |
-| `--help`, `-h`  | *(none)*         | Displays usage information and exits                        |
+| `-d`            | `/path/to/watch` | Directory to monitor for new video files (mandatory)         |
+| `-L`            | `/path/to/logs`  | Custom directory to store log files, (optional)              |
+| `--uninstall`   | *(none)*         | Removes the service and all associated files                 |
+| `--help`, `-h`  | *(none)*         | Displays usage information and exits                         |
+
+---
+
+## 🧪 Example Workflow
+
+```bash
+# Step 1: Install and start the service
+./install.sh -d /home/siyamthanda/videos
+
+# Step 2: Drop a video file into the watched directory
+mv sample.mp4 /home/siyamthanda/videos/
+
+# Step 3: View logs
+cat /var/log/transcode/20250829_173100.log
+```
 
 ---
 
@@ -83,6 +119,7 @@ Creates a log file like:
 
 ---
 
+
 ## 🔧 Uninstallation
 
 To remove the service and clean up all files:
@@ -98,49 +135,47 @@ This will:
 
 ---
 
-## 🧊 Alpine Linux Support
 
-Alpine support has been **removed** from the current version.  
-A dedicated Alpine-compatible script will be released separately.
+## 📄 Version Summary
+
+| Script Name      | Version | Notes                                                         |
+|------------------|---------|---------------------------------------------------------------|
+| `install.sh`     | 1.5.3   | Script moved to `/opt`, cron cleanup                          |
+| `transcode.sh`   | 8.3.2   | Lazy folder creation + quarantine system for failed transcodes|
+| `requirements.sh`| 1.2.3   | Efficient package install + cron support                      |
 
 ---
 
 ## 🗒️ Changelog
 
- **install.sh v1.5.2**
-- Added moved_to support to detect same filesystem changes e.g. from one folder to the watched folder in the same drive.
-- switched to --format '%w%f' for reliable path parsing
-- Minor README and logging improvements
-
- **install.sh v1.5.2.1**
- - Retained moved_to event in inotifywait to support intra-filesystem file moves
- - All other changes from 1.5.2 (including README and systemd format fixes) have been reverted
-
----
-## 📄 Versioning Summary
-
-| Script Name       | Version | Notes                                 |
-|------------------|---------|----------------------------------------|
-| `install.sh`     | 1.5.2   | Systemd setup and teardown             |
-| `transcode.sh`   | 8.2.3   | Transcoding with logging enhancements  |
-| `requirements.sh`| 1.2.1   | Alpine support removed                 |
-
----
-
-## 🧪 Example Workflow
-
-```bash
-# Step 1: Install and start the service
-./install.sh -d /home/siyamthanda/videos
-
-# Step 2: Drop a video file into the watched directory
-mv sample.mp4 /home/siyamthanda/videos/
-
-# Step 3: View logs
-cat /var/log/transcode/20250829_173100.log
+ **install.sh v1.5.3**
+ - Retained moved_to event in inotifywait to support intra-filesystem file moves.
+ - All other changes from 1.5.2 have been partially reverted.
+ - Script folder changed to `/opt/auto-trranscode` to keep in line with traditional `unix` folder management.
+ - Creates a `cron` job to cleanup the `.cache` folder every morning at 3am.
+ ```bash
+ 0 3 * * * find /landing/.cache -type f -mtime +1 -delete
 ```
+ 
+ **transcode.sh v8.3.2**
 
+ - A quarantine system for failed transcodes, including a file.extention.fail `sidecar` file and a running `log` file for all failed transcodes in format:  
+ ```bash
+ 2025-09-26 17:52 - video1.mp4 - invalid input data
+ ```
+ - Lazy folder creation to avoid creating empty destination folders if a transcode fails.
+
+ **requirements.sh v1.2.3**
+  - Checks for an installs `cron` or `cronie`, depending on `distro`, if it is not installed already.
 ---
+
+## 🧰 Coming Soon...##
+
+- Optional flags for dry-run, quarantine toggle and metadata based dating.
+- Alpine support.
+- Docker support.
+- An interactive dialog for `tui` installation.
+
 
 ## 🤝 Contributing
 
