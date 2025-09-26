@@ -1,6 +1,6 @@
 #!/bin/bash
-## Version 1.5.2
-## improved file and directory handling with inotifywait
+## Version 1.5.2.1
+## improved file and directory handling with inotifywait regression fix, back to version 1.5.1 with added moved_to support.
 
 set -e  # Exit on any error
 
@@ -80,7 +80,7 @@ After=network.target
 
 [Service]
 User=$(logname)
-ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write,moved_to --format '%w%f' $DIRECTORY | while read -r filepath; do /transcode/scripts/transcode.sh \"\$filepath\"; done"t a
+ExecStart=/bin/bash -c "/usr/bin/inotifywait -m -e close_write,moved_to $DIRECTORY | while read -r dir events filename; do /transcode/scripts/transcode.sh \"\$dir\$filename\"; done"
 Restart=always
 
 [Install]
