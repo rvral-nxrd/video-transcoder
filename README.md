@@ -112,6 +112,10 @@ A dedicated Alpine-compatible script will be released separately.
 - switched to --format '%w%f' for reliable path parsing
 - Minor README and logging improvements
 
+ **install.sh v1.5.2.1**
+ - Retained moved_to event in inotifywait to support intra-filesystem file moves
+ - All other changes from 1.5.2 (including README and systemd format fixes) have been reverted
+
 ---
 ## 📄 Versioning Summary
 
