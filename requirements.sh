@@ -1,7 +1,6 @@
 #!/bin/bash
-## Version 1.2.3
-# This script checks for and installs required packages for video transcoding.
-# Alpine support has been removed.
+## Version 1.2.4
+# Fixes missing install_and_enable function and streamlines cron installation
 
 REQUIRED_PACKAGES=("ffmpeg" "inotify-tools")
 
@@ -22,19 +21,9 @@ detect_package_manager() {
 # Check if a package is installed
 check_package() {
   case "$PKG_MANAGER" in
-    apt)
-      dpkg -s "$1" &> /dev/null
-      ;;
-    dnf)
-      rpm -q "$1" &> /dev/null
-      ;;
-    pacman)
-      pacman -Q "$1" &> /dev/null
-      ;;
-    *)
-      echo "Unsupported package manager"
-      exit 1
-      ;;
+    apt) dpkg -s "$1" &> /dev/null ;;
+    dnf) rpm -q "$1" &> /dev/null ;;
+    pacman) pacman -Q "$1" &> /dev/null ;;
   esac
 }
 
@@ -50,10 +39,6 @@ install_package() {
       ;;
     pacman)
       sudo pacman -Sy --noconfirm "$1"
-      ;;
-    *)
-      echo "Unsupported package manager"
-      exit 1
       ;;
   esac
 }
@@ -72,10 +57,24 @@ done
 
 # Check and install cron
 if ! command -v crontab &> /dev/null; then
+  echo "📦 Installing cron..."
+
   case "$PKG_MANAGER" in
-    apt) install_and_enable "cron" "cron" ;;
-    dnf) install_and_enable "cronie" "crond" ;;
-    pacman) install_and_enable "cronie" "cronie" ;;
+    apt)
+      install_package "cron"
+      sudo systemctl enable cron
+      sudo systemctl start cron
+      ;;
+    dnf)
+      install_package "cronie"
+      sudo systemctl enable crond
+      sudo systemctl start crond
+      ;;
+    pacman)
+      install_package "cronie"
+      sudo systemctl enable cronie
+      sudo systemctl start cronie
+      ;;
   esac
 else
   echo "✅ cron is already installed"
