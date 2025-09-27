@@ -1,6 +1,6 @@
 #!/bin/bash
-## Version 8.3.2
-# Adds quarantine system with sidecar fail files and running failure log
+## Version 8.3.3
+# Fixes quarantine logic to reliably move failed files and log errors
 
 VERBOSE=0
 LOG_DIR="/var/log/transcode"
@@ -56,11 +56,13 @@ TRANSCODING_PROCESS() {
 
   if [ $VERBOSE -eq 1 ]; then
     ffmpeg -nostdin -y -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$TEMP_OUTPUT" 2>>"$LOG_FILE"
+    EXIT_CODE=$?
   else
     ffmpeg -nostdin -y -loglevel error -threads auto -i "$FILE_PATH" -c:v mpeg4 -q:v 10 -c:a pcm_s16le "$TEMP_OUTPUT" 2>>"$LOG_FILE"
+    EXIT_CODE=$?
   fi
 
-  if [ $? -eq 0 ]; then
+  if [ $EXIT_CODE -eq 0 ]; then
     DATE=$(stat -c "%y" "$FILE_PATH" | cut -d ' ' -f 1)
     OUTPUT_FOLDER="${FILE_PATH%/*}/$DATE"
     mkdir -p "$OUTPUT_FOLDER"
@@ -72,9 +74,11 @@ TRANSCODING_PROCESS() {
 
     rm "$FILE_PATH" && log "🗑️ Deleted original file: $FILE_PATH"
   else
-    ERROR_MSG=$(tail -n 1 "$LOG_FILE")
     FAILED_DIR="$(dirname "$FILE_PATH")/failed"
     mkdir -p "$FAILED_DIR"
+
+    ERROR_MSG=$(tail -n 1 "$LOG_FILE")
+    [ -z "$ERROR_MSG" ] && ERROR_MSG="Unknown ffmpeg error"
 
     # Sidecar .fail file
     echo "$ERROR_MSG" > "$FAILED_DIR/$BASENAME.fail"
@@ -83,10 +87,10 @@ TRANSCODING_PROCESS() {
     echo "$(date '+%Y-%m-%d %H:%M') - $(basename "$FILE_PATH") - $ERROR_MSG" >> "$FAILED_DIR/failure.txt"
 
     # Move original file
-    mv "$FILE_PATH" "$FAILED_DIR/"
+    mv -n "$FILE_PATH" "$FAILED_DIR/"
     rm -f "$TEMP_OUTPUT"
 
-    log "❌ Transcoding failed: $FILE_PATH → moved to quarantine"
+    log "❌ Transcoding failed: $FILE_PATH → moved to $FAILED_DIR"
   fi
 }
 
