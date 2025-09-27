@@ -28,8 +28,8 @@ This project is under heavy development by an unskilled and time limited script 
 - **Uninstall Support**  
   Clean removal of all service components via a single `--uninstall` flag.
 
-- **Failure Handling**
-  Failed transcodes are moved to `failed` with a `.fail` sidecar file and a running log.(`broken`)
+- **Failure Handling (`broken`)**  
+Failed transcodes are moved to `failed` with a `.fail` sidecar file and a running log.
 
 - **Cross-Distro Compatibility**  
   Supports `apt`, `dnf`, and `pacman` package managers.
