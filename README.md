@@ -5,6 +5,11 @@
  It watches a specified directory for new video files, transcodes them using `ffmpeg`, and organizes the output by creation date.
 
 ---
+# WARNING!!
+
+This project is under heavy development by an unskilled and time limited script kiddy, there *WILL* be breaking changes, most of which will not be recorded.
+
+---
 
 ## ✨ Features
 
@@ -24,7 +29,7 @@
   Clean removal of all service components via a single `--uninstall` flag.
 
 - **Failure Handling**
-  Failed transcodes are moved to `failed` with a `.fail` sidecar file and a running log.
+  Failed transcodes are moved to `failed` with a `.fail` sidecar file and a running log.(`broken`)
 
 - **Cross-Distro Compatibility**  
   Supports `apt`, `dnf`, and `pacman` package managers.
@@ -188,5 +193,5 @@ Fork the project and build a better one, please, I beg you. I do NOT have the ti
 This project is open-source and available under the [MIT License](LICENSE).
 
 > This script was created in collaboration with Microsoft Copilot, an AI companion.  
-> Copilot Version: August 2025  
+> Copilot Version: September 2025  
 > Copilot is licensed under the [Microsoft License Terms](https://aka.ms/copilotlicense).
